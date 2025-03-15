@@ -44,7 +44,7 @@ test("can pass an ID prefix", () => {
 });
 
 test("can add nested routes", () => {
-	expect(crud("users", () => [...crud("comments")])).toEqual([
+	expect(crud("users", () => [crud("comments")])).toEqual([
 		route("users", "./views/users/_layout.tsx", { id: "users.layout" }, [
 			index("./views/users/index.tsx", { id: "users.index" }),
 			route("new", "./views/users/new.tsx", { id: "users.new" }),
@@ -88,7 +88,7 @@ test("can add nested routes", () => {
 
 test("can add options and nested routes", () => {
 	expect(
-		crud("users", { idPrefix: "admin" }, () => [...crud("comments")]),
+		crud("users", { idPrefix: "admin" }, () => [crud("comments")]),
 	).toEqual([
 		route("users", "./views/users/_layout.tsx", { id: "admin.users.layout" }, [
 			index("./views/users/index.tsx", { id: "admin.users.index" }),
@@ -136,8 +136,8 @@ test("can add options and nested routes", () => {
 test("can set nested routes to be collection or member routes", () => {
 	expect(
 		crud("users", () => [
-			...crud("posts", { on: "collection" }),
-			...crud("comments", { on: "member" }),
+			crud("posts", { on: "collection" }),
+			crud("comments", { on: "member" }),
 		]),
 	).toEqual([
 		route("users", "./views/users/_layout.tsx", { id: "users.layout" }, [
@@ -211,7 +211,7 @@ test("can set nested routes to be collection or member routes", () => {
 });
 
 test.failing("can set nested routes to be shallow", () => {
-	expect(crud("users", () => [...crud("posts", { on: "shallow" })])).toEqual([
+	expect(crud("users", () => [crud("posts", { on: "shallow" })])).toEqual([
 		route("users", "./views/users/_layout.tsx", { id: "users.layout" }, [
 			index("./views/users/index.tsx", { id: "users.index" }),
 			route("new", "./views/users/new.tsx", { id: "users.new" }),

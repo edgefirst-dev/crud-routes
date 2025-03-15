@@ -79,10 +79,9 @@ export function crud(
 
 	let routes: RouteConfigEntry[] = [];
 
-	let nestedRoutes = prefixStorage.run(
-		generateRouteId(resource, options.idPrefix),
-		() => children(),
-	);
+	let nestedRoutes = prefixStorage
+		.run(generateRouteId(resource, options.idPrefix), () => children())
+		.flat();
 
 	if (only.includes("index")) {
 		routes.push({
@@ -175,7 +174,9 @@ function generateRouteId(
 }
 
 export namespace crud {
-	export type ChildrenFunction = () => Array<RouteConfigEntry>;
+	export type ChildrenFunction = () =>
+		| Array<RouteConfigEntry>
+		| Array<Array<RouteConfigEntry>>;
 
 	export interface CrudOptions {
 		idPrefix?: string;

@@ -5,7 +5,6 @@
       "name": "package-name",
       "dependencies": {
         "@react-router/dev": "^7.3.0",
-        "@ryanflorence/async-provider": "^0.0.1",
         "inflected": "^2.1.0",
       },
       "devDependencies": {
@@ -225,8 +224,6 @@
     "@rollup/rollup-win32-ia32-msvc": ["@rollup/rollup-win32-ia32-msvc@4.35.0", "", { "os": "win32", "cpu": "ia32" }, "sha512-2/lsgejMrtwQe44glq7AFFHLfJBPafpsTa6JvP2NGef/ifOa4KBoglVf7AKN7EV9o32evBPRqfg96fEHzWo5kw=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.35.0", "", { "os": "win32", "cpu": "x64" }, "sha512-PIQeY5XDkrOysbQblSW7v3l1MDZzkTEzAfTPkj5VAu3FW8fS4ynyLg2sINp0fp3SjZ8xkRYpLqoKcYqAkhU1dw=="],
-
-    "@ryanflorence/async-provider": ["@ryanflorence/async-provider@0.0.1", "", {}, "sha512-uiuLivJoHrU6OGBHydZNczL7d++aqU/ZcCzeK5dYGJBnHxaaCygBJ3dAh7Mqp+gCuIlwBg2yuMF1o1GfoSEzqw=="],
 
     "@shikijs/engine-oniguruma": ["@shikijs/engine-oniguruma@1.29.2", "", { "dependencies": { "@shikijs/types": "1.29.2", "@shikijs/vscode-textmate": "^10.0.1" } }, "sha512-7iiOx3SG8+g1MnlzZVDYiaeHe7Ez2Kf2HrJzdmGwkRisT7r4rak0e655AcM/tF9JG/kg5fMNYlLLKglbN7gBqA=="],
 

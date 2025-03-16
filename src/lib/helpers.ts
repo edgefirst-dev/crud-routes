@@ -8,9 +8,16 @@ declare module "@react-router/dev/routes" {
 	export type IndexFunction = typeof RRHelpers.index;
 	export type PrefixFunction = typeof RRHelpers.prefix;
 	export type RouteFunction = typeof RRHelpers.route;
+	export type LayoutFunction = typeof RRHelpers.layout;
 
-	export type CreateIndexOptions = NonNullable<Parameters<IndexFunction>[1]>;
-	export type CreateRouteOptions = NonNullable<Parameters<RouteFunction>[2]>;
+	export interface CreateIndexOptions
+		extends NonNullable<Parameters<IndexFunction>[1]> {}
+
+	export interface CreateRouteOptions
+		extends NonNullable<Parameters<RouteFunction>[2]> {}
+
+	export interface CreateLayoutOptions
+		extends NonNullable<Parameters<LayoutFunction>[1]> {}
 }
 
 export interface RouteConfigEntry extends RRHelpers.RouteConfigEntry {
@@ -62,6 +69,34 @@ export function route(
 
 export namespace route {
 	export type CreateRouteOptions = RRHelpers.CreateRouteOptions & {
+		on?: "member" | "collection" | "shallow";
+	};
+}
+
+export function layout(
+	file: string,
+	options?: layout.CreateLayoutOptions,
+	children?: RouteConfigEntry[],
+): RouteConfigEntry {
+	if (options && !children) {
+		return {
+			...RRHelpers.layout(file, options),
+			on: options?.on,
+		};
+	}
+
+	if (options && children) {
+		return {
+			...RRHelpers.layout(file, options, children),
+			on: options?.on,
+		};
+	}
+
+	return { ...RRHelpers.layout(file), on: options?.on };
+}
+
+export namespace layout {
+	export type CreateLayoutOptions = RRHelpers.CreateLayoutOptions & {
 		on?: "member" | "collection" | "shallow";
 	};
 }

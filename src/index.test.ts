@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createCrud, crud } from ".";
-import { index, prefix, route } from "./lib/helpers";
+import { index, layout, prefix, route } from "./lib/helpers";
 
 test("returns a group of CRUD routes", () => {
 	expect(crud("users")).toEqual([
@@ -210,8 +210,12 @@ test("can set nested routes to be collection or member routes", () => {
 	]);
 });
 
-test.failing("can set nested routes to be shallow", () => {
-	expect(crud("users", () => [crud("posts", { on: "shallow" })])).toEqual([
+test("can set nested routes to be shallow", () => {
+	let result = crud("users", () => [
+		crud("posts", { on: "shallow" }),
+		crud("comments", { on: "shallow" }),
+	]);
+	expect(result).toEqual([
 		route("users", "./views/users/_layout.tsx", { id: "users.layout" }, [
 			index("./views/users/index.tsx", { id: "users.index" }),
 			route("new", "./views/users/new.tsx", { id: "users.new" }),
@@ -219,28 +223,47 @@ test.failing("can set nested routes to be shallow", () => {
 				index("./views/users/show.tsx", { id: "users.show" }),
 				route("edit", "./views/users/edit.tsx", { id: "users.edit" }),
 				route("destroy", "./views/users/destroy.tsx", { id: "users.destroy" }),
-				route(
-					"posts",
-					"./views/posts/_layout.tsx",
-					{ id: "users.posts.layout", on: "shallow" },
-					[
-						index("./views/posts/index.tsx", {
-							id: "users.posts.index",
-							on: "shallow",
-						}),
-						route("new", "./views/posts/new.tsx", {
-							id: "users.posts.new",
-							on: "shallow",
-						}),
-					],
-				),
 			]),
 		]),
-		route(
-			"posts",
+
+		...prefix("users/:userId", [
+			route(
+				"posts",
+				"./views/posts/_layout.tsx",
+				{ id: "users.posts.layout", on: "shallow" },
+				[
+					index("./views/posts/index.tsx", {
+						id: "users.posts.index",
+						on: "shallow",
+					}),
+					route("new", "./views/posts/new.tsx", {
+						id: "users.posts.new",
+						on: "shallow",
+					}),
+				],
+			),
+
+			route(
+				"comments",
+				"./views/comments/_layout.tsx",
+				{ id: "users.comments.layout", on: "shallow" },
+				[
+					index("./views/comments/index.tsx", {
+						id: "users.comments.index",
+						on: "shallow",
+					}),
+					route("new", "./views/comments/new.tsx", {
+						id: "users.comments.new",
+						on: "shallow",
+					}),
+				],
+			),
+		]),
+
+		layout(
 			"./views/posts/_layout.tsx",
 			{ id: "posts.layout", on: "shallow" },
-			prefix(":postId", [
+			prefix("posts/:postId", [
 				index("./views/posts/show.tsx", {
 					id: "posts.show",
 					on: "shallow",
@@ -251,6 +274,25 @@ test.failing("can set nested routes to be shallow", () => {
 				}),
 				route("destroy", "./views/posts/destroy.tsx", {
 					id: "posts.destroy",
+					on: "shallow",
+				}),
+			]),
+		),
+
+		layout(
+			"./views/comments/_layout.tsx",
+			{ id: "comments.layout", on: "shallow" },
+			prefix("comments/:commentId", [
+				index("./views/comments/show.tsx", {
+					id: "comments.show",
+					on: "shallow",
+				}),
+				route("edit", "./views/comments/edit.tsx", {
+					id: "comments.edit",
+					on: "shallow",
+				}),
+				route("destroy", "./views/comments/destroy.tsx", {
+					id: "comments.destroy",
 					on: "shallow",
 				}),
 			]),

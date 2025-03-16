@@ -148,10 +148,7 @@ export default [
 
 #### Shallow Routes
 
-> [!CAUTION]
-> Shallow routes are not yet implemented.
-
-Shallow routes allows you to nest a resource inside another resource, but limiting it to only the index and new routes. While the show, edit, and destroy routes are not nested.
+Shallow routes allows you to nest a resource inside another resource, but limiting it to only the `index` and `new` routes. While the `show`, `edit`, and `destroy` routes are not nested, and with the same layout for both nested and non-nested routes.
 
 ```ts
 import { crud } from "@edgefirst-dev/crud-routes";

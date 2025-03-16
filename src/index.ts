@@ -1,6 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { camelize, pluralize, singularize } from "inflected";
-import { type RouteConfigEntry, index, prefix, route } from "./lib/helpers.js";
+import {
+	type RouteConfigEntry,
+	index,
+	layout,
+	prefix,
+	route,
+} from "./lib/helpers.js";
 
 const baseStorage = new AsyncLocalStorage<string>();
 const prefixStorage = new AsyncLocalStorage<string>();
@@ -66,11 +72,8 @@ export function crud(
 		options = {};
 	}
 
-	if (options.on === "shallow") {
-		throw new Error("Shallow routes are not implemented yet");
-	}
-
 	let base = baseStorage.getStore() ?? "./views";
+	let parentPrefix = prefixStorage.getStore() ?? "";
 
 	let plural = pluralize(resource);
 	let camelCase = camelize(singularize(resource), false);
@@ -80,13 +83,13 @@ export function crud(
 	let routes: RouteConfigEntry[] = [];
 
 	let nestedRoutes = prefixStorage
-		.run(generateRouteId(resource, options.idPrefix), () => children())
+		.run(generateRouteId(resource, options.idPrefix), children)
 		.flat();
 
 	if (only.includes("index")) {
 		routes.push({
 			...index(`${base}/${plural}/index.tsx`, {
-				id: generateRouteId(resource, options.idPrefix, "index"),
+				id: generateRouteId(resource, options.idPrefix, "index", parentPrefix),
 				on: options.on,
 			}),
 		});
@@ -95,7 +98,7 @@ export function crud(
 	if (only.includes("new")) {
 		routes.push(
 			route("new", `${base}/${plural}/new.tsx`, {
-				id: generateRouteId(resource, options.idPrefix, "new"),
+				id: generateRouteId(resource, options.idPrefix, "new", parentPrefix),
 				on: options.on,
 			}),
 		);
@@ -111,7 +114,7 @@ export function crud(
 		if (only.includes("show")) {
 			prefixedRoutes.push(
 				index(`${base}/${plural}/show.tsx`, {
-					id: generateRouteId(resource, options.idPrefix, "show"),
+					id: generateRouteId(resource, options.idPrefix, "show", parentPrefix),
 					on: options.on,
 				}),
 			);
@@ -120,7 +123,7 @@ export function crud(
 		if (only.includes("edit")) {
 			prefixedRoutes.push(
 				route("edit", `${base}/${plural}/edit.tsx`, {
-					id: generateRouteId(resource, options.idPrefix, "edit"),
+					id: generateRouteId(resource, options.idPrefix, "edit", parentPrefix),
 					on: options.on,
 				}),
 			);
@@ -129,7 +132,12 @@ export function crud(
 		if (only.includes("destroy")) {
 			prefixedRoutes.push(
 				route("destroy", `${base}/${plural}/destroy.tsx`, {
-					id: generateRouteId(resource, options.idPrefix, "destroy"),
+					id: generateRouteId(
+						resource,
+						options.idPrefix,
+						"destroy",
+						parentPrefix,
+					),
 					on: options.on,
 				}),
 			);
@@ -146,16 +154,85 @@ export function crud(
 		...nestedRoutes.filter((child) => !child.on || child.on === "collection"),
 	);
 
+	let shallowRoutes = nestedRoutes.filter((child) => child.on === "shallow");
+
+	let shallowRoutesChildren = shallowRoutes
+		.flatMap((route) => route.children)
+		.filter((child) => child !== undefined);
+
+	let nestedShallowRoutes = shallowRoutesChildren.filter((child) => {
+		return child?.id?.endsWith("index") || child?.id?.endsWith("new");
+	});
+
+	let nestedShallowRoutesEntries = Array.from(
+		nestedShallowRoutes
+			.reduce((acc, route) => {
+				if (route.id === undefined) return acc;
+				let name = route.id.split(".").find((segment) => segment !== resource);
+				if (!name) return acc;
+				if (acc.has(name)) acc.get(name)?.push(route);
+				else acc.set(name, [route]);
+				return acc;
+			}, new Map<string, RouteConfigEntry[]>())
+			.entries(),
+	);
+
+	let nonNestedShallowRoutes = shallowRoutesChildren
+		.filter(
+			(child) => !child?.id?.endsWith("index") && !child?.id?.endsWith("new"),
+		)
+		.map((route) => ({
+			...route,
+			id: route.id?.split(".").slice(1).join("."),
+		}));
+
+	let nonNestedShallowRoutesEntries = Array.from(
+		nonNestedShallowRoutes
+			.reduce((acc, route) => {
+				if (route.id === undefined) return acc;
+				let name = route.id.split(".").find((segment) => segment !== resource);
+				if (!name) return acc;
+				if (acc.has(name)) acc.get(name)?.push(route);
+				else acc.set(name, [route]);
+				return acc;
+			}, new Map<string, RouteConfigEntry[]>())
+			.entries(),
+	);
+
 	return [
 		route(
 			plural,
 			`${base}/${plural}/_layout.tsx`,
 			{
-				id: generateRouteId(resource, options.idPrefix, "layout"),
+				id: generateRouteId(resource, options.idPrefix, "layout", parentPrefix),
 				on: options.on,
 			},
 			routes,
 		),
+		...prefix(
+			`${plural}/:${camelCase}Id`,
+			nestedShallowRoutesEntries.map(([name, routes]) => {
+				return route(
+					name,
+					`${base}/${name}/_layout.tsx`,
+					{
+						id: generateRouteId(name, options.idPrefix, "layout", resource),
+						on: "shallow",
+					},
+					routes,
+				);
+			}),
+		),
+		...nonNestedShallowRoutesEntries.map(([name, routes]) => {
+			return layout(
+				`${base}/${name}/_layout.tsx`,
+				{
+					id: generateRouteId(name, options.idPrefix, "layout"),
+					on: "shallow",
+				},
+				prefix(name, routes),
+			);
+		}),
 	];
 }
 
@@ -163,10 +240,10 @@ function generateRouteId(
 	resource: string,
 	idPrefix: string | undefined,
 	name?: string,
+	parentPrefix?: string,
 ) {
-	let prefix = prefixStorage.getStore();
 	let id = [];
-	if (prefix) id.push(prefix);
+	if (parentPrefix) id.push(parentPrefix);
 	if (idPrefix) id.push(idPrefix);
 	id.push(resource);
 	if (name) id.push(name);
@@ -199,4 +276,4 @@ export namespace crud {
 		  ) => Array<RouteConfigEntry>);
 }
 
-export { index, prefix, route };
+export { index, layout, prefix, route };

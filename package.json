@@ -41,7 +41,7 @@
 		"./package.json": "./package.json"
 	},
 	"dependencies": {
-		"@react-router/dev": "^7.3.0",
+		"@react-router/dev": "^8.0.1",
 		"inflected": "^2.1.0"
 	},
 	"peerDependencies": {},
